@@ -15,7 +15,7 @@ public class TestClass
                 new Coordinate(42.39202286040115, 1.3300323486328125),
                 new Coordinate(42.70968691975666, 1.8560028076171875)
             ),
-            featureData => { return true; }
+            featureData => true
         );
     }
 }
