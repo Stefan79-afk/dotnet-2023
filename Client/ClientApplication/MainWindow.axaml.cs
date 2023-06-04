@@ -8,7 +8,7 @@ namespace Mapster.ClientApplication;
 
 public partial class MainWindow : Window
 {
-    private static readonly HttpClient _httpClient = new();
+    private static readonly HttpClient HttpClient = new();
 
     private int _clickCounter;
 
@@ -31,7 +31,7 @@ public partial class MainWindow : Window
 
         try
         {
-            var response = _httpClient
+            var response = HttpClient
                 .GetAsync(
                     "http://localhost:8080/render?minLon=1.388397216796875&minLat=42.402164470921285&maxLon=1.8024444580078125&maxLat=42.67688269641377&size=2000")
                 .Result;
@@ -43,10 +43,5 @@ public partial class MainWindow : Window
             Console.Error.WriteLine(ex.Message);
         }
     }
-
-    private class ServiceResponse
-    {
-        public int tileCount { get; set; }
-        public byte[][]? imageData { get; set; }
-    }
+    
 }
