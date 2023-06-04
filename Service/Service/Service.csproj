@@ -11,17 +11,17 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\..\Common\Common.csproj" />
-        <ProjectReference Include="..\..\Rendering\TileRenderer\TileRenderer.csproj" />
+        <ProjectReference Include="..\..\Common\Common.csproj"/>
+        <ProjectReference Include="..\..\Rendering\TileRenderer\TileRenderer.csproj"/>
     </ItemGroup>
 
     <ItemGroup>
-        <PackageReference Include="CommandLineParser" Version="2.9.1" />
-        <PackageReference Include="Newtonsoft.Json.Bson" Version="1.0.2" />
+        <PackageReference Include="CommandLineParser" Version="2.9.1"/>
+        <PackageReference Include="Newtonsoft.Json.Bson" Version="1.0.2"/>
     </ItemGroup>
 
     <ItemGroup>
-        <Folder Include="Endpoints\" />
+        <Folder Include="Endpoints\"/>
     </ItemGroup>
 
 </Project>

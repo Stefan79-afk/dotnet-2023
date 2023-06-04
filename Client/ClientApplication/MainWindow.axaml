@@ -8,9 +8,9 @@
         Height="480"
         Title="Mapster Client Application">
     <Grid Margin="5" ColumnDefinitions="*" RowDefinitions="Auto,*">
-		<Button Grid.Row="0" HorizontalAlignment="Right" Click="OnButtonPressed" Content="{Binding Model.Data}" />
-		<ScrollViewer Grid.Row="1">
-			<ItemsRepeater Items="{Binding Items}"></ItemsRepeater>
-		</ScrollViewer>
-	</Grid>
+        <Button Grid.Row="0" HorizontalAlignment="Right" Click="OnButtonPressed" Content="{Binding Model.Data}" />
+        <ScrollViewer Grid.Row="1">
+            <ItemsRepeater Items="{Binding Items}" />
+        </ScrollViewer>
+    </Grid>
 </Window>

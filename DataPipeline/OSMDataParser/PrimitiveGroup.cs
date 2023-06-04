@@ -1,4 +1,5 @@
 using System.Collections;
+using OSMDataParser.Elements;
 
 namespace OSMDataParser;
 
@@ -10,21 +11,16 @@ public class PrimitiveGroup : IEnumerable<AbstractElement>
         Node,
         Way,
         Relation,
-        ChangeSet,
+        ChangeSet
     }
 
-    private OSMPBF.PrimitiveGroup _osmPrimitiveGroup;
-    private PrimitiveBlock _primitiveBlock;
-    private DenseNodes? _denseNodes;
+    private readonly DenseNodes? _denseNodes;
 
-    internal StringTable StringTable { get; }
-    internal Func<int, AbstractElementInternal> ElementGetter { get; }
+    private readonly OSMPBF.PrimitiveGroup _osmPrimitiveGroup;
+    private readonly PrimitiveBlock _primitiveBlock;
 
-    public ElementType ContainedType { get; }
-
-    public int Count { get; }
-
-    internal PrimitiveGroup(PrimitiveBlock primitiveBlock, OSMPBF.PrimitiveGroup? osmPrimitiveGroup = null, StringTable? stringTable = null)
+    internal PrimitiveGroup(PrimitiveBlock primitiveBlock, OSMPBF.PrimitiveGroup? osmPrimitiveGroup = null,
+        StringTable? stringTable = null)
     {
         _osmPrimitiveGroup = osmPrimitiveGroup == null ? new OSMPBF.PrimitiveGroup() : osmPrimitiveGroup;
         _primitiveBlock = primitiveBlock;
@@ -73,6 +69,13 @@ public class PrimitiveGroup : IEnumerable<AbstractElement>
         }
     }
 
+    internal StringTable StringTable { get; }
+    internal Func<int, AbstractElementInternal> ElementGetter { get; }
+
+    public ElementType ContainedType { get; }
+
+    public int Count { get; }
+
     public IEnumerator<AbstractElement> GetEnumerator()
     {
         return new ElementEnumerator(this);
@@ -85,27 +88,27 @@ public class PrimitiveGroup : IEnumerable<AbstractElement>
 
     private AbstractElementInternal GetUnknown(int index)
     {
-        return new Elements.Unknown();
+        return new Unknown();
     }
 
     private AbstractElementInternal GetNode(int index)
     {
-        return new Elements.SimpleNode(_osmPrimitiveGroup.Nodes[index], _primitiveBlock);
+        return new SimpleNode(_osmPrimitiveGroup.Nodes[index], _primitiveBlock);
     }
 
     private AbstractElementInternal GetWay(int index)
     {
-        return new Elements.Way(_osmPrimitiveGroup.Ways[index]);
+        return new Way(_osmPrimitiveGroup.Ways[index]);
     }
 
     private AbstractElementInternal GetRelation(int index)
     {
-        return new Elements.Relation();
+        return new Relation();
     }
 
     private AbstractElementInternal GetChangeSet(int index)
     {
-        return new Elements.ChangeSet();
+        return new ChangeSet();
     }
 
     private AbstractElementInternal GetNextDenseNode(int index)
@@ -117,21 +120,21 @@ public class PrimitiveGroup : IEnumerable<AbstractElement>
 
 public class ElementEnumerator : IEnumerator<AbstractElement>
 {
-    private bool _disposedValue = false;
-    private AbstractElementInternal _currentElement = new Elements.Unknown();
-    private PrimitiveGroup _primitiveGroup;
-    private int _elementCount;
-    private int _currentIndex = 0;
-
-    public AbstractElement Current => _currentElement;
-
-    object IEnumerator.Current => Current;
+    private AbstractElementInternal _currentElement = new Unknown();
+    private int _currentIndex;
+    private bool _disposedValue;
+    private readonly int _elementCount;
+    private readonly PrimitiveGroup _primitiveGroup;
 
     public ElementEnumerator(PrimitiveGroup primitiveGroup)
     {
         _primitiveGroup = primitiveGroup;
         _elementCount = primitiveGroup.Count;
     }
+
+    public AbstractElement Current => _currentElement;
+
+    object IEnumerator.Current => Current;
 
     public bool MoveNext()
     {
@@ -150,6 +153,13 @@ public class ElementEnumerator : IEnumerator<AbstractElement>
         _currentIndex = 0;
     }
 
+    public void Dispose()
+    {
+        // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
+        Dispose(true);
+        GC.SuppressFinalize(this);
+    }
+
     protected virtual void Dispose(bool disposing)
     {
         if (!_disposedValue)
@@ -160,12 +170,5 @@ public class ElementEnumerator : IEnumerator<AbstractElement>
 
             _disposedValue = true;
         }
-    }
-
-    public void Dispose()
-    {
-        // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
-        Dispose(disposing: true);
-        GC.SuppressFinalize(this);
     }
 }

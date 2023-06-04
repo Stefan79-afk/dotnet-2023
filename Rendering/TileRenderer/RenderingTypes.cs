@@ -118,29 +118,18 @@ public struct GeoFeature : BaseShape
                 naturalKey == "moor" ||
                 naturalKey == "scrub" ||
                 naturalKey == "wetland")
-            {
                 Type = GeoFeatureType.Plain;
-            }
             else if (naturalKey == "wood" ||
                      naturalKey == "tree_row")
-            {
                 Type = GeoFeatureType.Forest;
-            }
             else if (naturalKey == "bare_rock" ||
                      naturalKey == "rock" ||
                      naturalKey == "scree")
-            {
                 Type = GeoFeatureType.Mountains;
-            }
             else if (naturalKey == "beach" ||
                      naturalKey == "sand")
-            {
                 Type = GeoFeatureType.Desert;
-            }
-            else if (naturalKey == "water")
-            {
-                Type = GeoFeatureType.Water;
-            }
+            else if (naturalKey == "water") Type = GeoFeatureType.Water;
         }
 
         ScreenCoordinates = new PointF[c.Length];
@@ -187,10 +176,7 @@ public struct PopulatedPlace : BaseShape
 
     public void Render(IImageProcessingContext context)
     {
-        if (!ShouldRender)
-        {
-            return;
-        }
+        if (!ShouldRender) return;
         var font = SystemFonts.Families.First().CreateFont(12, FontStyle.Bold);
         context.DrawText(Name, font, Color.Black, ScreenCoordinates[0]);
     }
@@ -219,19 +205,12 @@ public struct PopulatedPlace : BaseShape
     public static bool ShouldBePopulatedPlace(MapFeatureData feature)
     {
         // https://wiki.openstreetmap.org/wiki/Key:place
-        if (feature.Type != GeometryType.Point)
-        {
-            return false;
-        }
+        if (feature.Type != GeometryType.Point) return false;
         foreach (var entry in feature.Properties)
             if (entry.Key.StartsWith("place"))
-            {
                 if (entry.Value.StartsWith("city") || entry.Value.StartsWith("town") ||
                     entry.Value.StartsWith("locality") || entry.Value.StartsWith("hamlet"))
-                {
                     return true;
-                }
-            }
         return false;
     }
 }
@@ -264,18 +243,9 @@ public struct Border : BaseShape
         var foundLevel = false;
         foreach (var entry in feature.Properties)
         {
-            if (entry.Key.StartsWith("boundary") && entry.Value.StartsWith("administrative"))
-            {
-                foundBoundary = true;
-            }
-            if (entry.Key.StartsWith("admin_level") && entry.Value == "2")
-            {
-                foundLevel = true;
-            }
-            if (foundBoundary && foundLevel)
-            {
-                break;
-            }
+            if (entry.Key.StartsWith("boundary") && entry.Value.StartsWith("administrative")) foundBoundary = true;
+            if (entry.Key.StartsWith("admin_level") && entry.Value == "2") foundLevel = true;
+            if (foundBoundary && foundLevel) break;
         }
 
         return foundBoundary && foundLevel;

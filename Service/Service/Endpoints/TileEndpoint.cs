@@ -17,7 +17,7 @@ internal class TileEndpoint : IDisposable
     public void Dispose()
     {
         // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
-        Dispose(disposing: true);
+        Dispose(true);
         GC.SuppressFinalize(this);
     }
 
@@ -26,12 +26,11 @@ internal class TileEndpoint : IDisposable
         // Map HTTP GET requests to this
         // Set up the request as parameterized on 'boundingBox', 'width' and 'height'
         app.MapGet("/render", HandleTileRequest);
-        async Task HandleTileRequest(HttpContext context, double minLat, double minLon, double maxLat, double maxLon, int? size, TileEndpoint tileEndpoint)
+
+        async Task HandleTileRequest(HttpContext context, double minLat, double minLon, double maxLat, double maxLon,
+            int? size, TileEndpoint tileEndpoint)
         {
-            if (size == null)
-            {
-                size = 800;
-            }
+            if (size == null) size = 800;
 
             var pixelBb = new TileRenderer.BoundingBox
             {
@@ -54,28 +53,24 @@ internal class TileEndpoint : IDisposable
             );
 
             context.Response.ContentType = "image/png";
-            await tileEndpoint.RenderPng(context.Response.BodyWriter.AsStream(), pixelBb, shapes, size.Value, size.Value);
+            await tileEndpoint.RenderPng(context.Response.BodyWriter.AsStream(), pixelBb, shapes, size.Value,
+                size.Value);
         }
     }
 
-    private async Task RenderPng(Stream outputStream, TileRenderer.BoundingBox boundingBox, PriorityQueue<BaseShape, int> shapes, int width, int height)
+    private async Task RenderPng(Stream outputStream, TileRenderer.BoundingBox boundingBox,
+        PriorityQueue<BaseShape, int> shapes, int width, int height)
     {
-        var canvas = await Task.Run(() =>
-        {
-            return shapes.Render(boundingBox, width, height);
-        }).ConfigureAwait(continueOnCapturedContext: false);
+        var canvas = await Task.Run(() => { return shapes.Render(boundingBox, width, height); }).ConfigureAwait(false);
 
-        await canvas.SaveAsPngAsync(outputStream).ConfigureAwait(continueOnCapturedContext: false);
+        await canvas.SaveAsPngAsync(outputStream).ConfigureAwait(false);
     }
 
     protected virtual void Dispose(bool disposing)
     {
         if (!_disposedValue)
         {
-            if (disposing)
-            {
-                _mapData.Dispose();
-            }
+            if (disposing) _mapData.Dispose();
 
             _disposedValue = true;
         }

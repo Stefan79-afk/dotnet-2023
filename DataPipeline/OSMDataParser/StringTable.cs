@@ -1,15 +1,17 @@
 using System.Collections;
-using Protobuf = Google.Protobuf;
+using System.Text;
+using Google.Protobuf;
+using Google.Protobuf.Collections;
 
 namespace OSMDataParser;
 
 internal class StringTable : IReadOnlyList<string>
 {
-    private IList<Protobuf.ByteString> _stringTable;
+    private readonly IList<ByteString> _stringTable;
 
-    public StringTable(IList<Protobuf.ByteString>? stringTable = null)
+    public StringTable(IList<ByteString>? stringTable = null)
     {
-        _stringTable = stringTable == null ? new Protobuf.Collections.RepeatedField<Protobuf.ByteString>() : stringTable;
+        _stringTable = stringTable == null ? new RepeatedField<ByteString>() : stringTable;
     }
 
     public string this[int index]
@@ -17,7 +19,7 @@ internal class StringTable : IReadOnlyList<string>
         get
         {
             var bytes = _stringTable[index].Span;
-            return System.Text.Encoding.UTF8.GetString(bytes);
+            return Encoding.UTF8.GetString(bytes);
         }
     }
 
@@ -36,15 +38,10 @@ internal class StringTable : IReadOnlyList<string>
 
 internal class StringTableEnumerator : IEnumerator<string>
 {
-    private bool _disposedValue = false;
-    private string _currentValue = string.Empty;
-    private StringTable _stringTable;
-    private int _count = 0;
-    private int _currentIndex = 0;
-
-    public string Current => _currentValue;
-
-    object IEnumerator.Current => Current;
+    private readonly int _count;
+    private int _currentIndex;
+    private bool _disposedValue;
+    private readonly StringTable _stringTable;
 
     public StringTableEnumerator(StringTable stringTable)
     {
@@ -52,18 +49,29 @@ internal class StringTableEnumerator : IEnumerator<string>
         _count = stringTable.Count;
     }
 
+    public string Current { get; private set; } = string.Empty;
+
+    object IEnumerator.Current => Current;
+
     public bool MoveNext()
     {
         if (_currentIndex >= _count)
             return false;
 
-        _currentValue = _stringTable[_currentIndex++];
+        Current = _stringTable[_currentIndex++];
         return true;
     }
 
     public void Reset()
     {
         _currentIndex = 0;
+    }
+
+    public void Dispose()
+    {
+        // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
+        Dispose(true);
+        GC.SuppressFinalize(this);
     }
 
     protected virtual void Dispose(bool disposing)
@@ -76,12 +84,5 @@ internal class StringTableEnumerator : IEnumerator<string>
 
             _disposedValue = true;
         }
-    }
-
-    public void Dispose()
-    {
-        // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
-        Dispose(disposing: true);
-        GC.SuppressFinalize(this);
     }
 }

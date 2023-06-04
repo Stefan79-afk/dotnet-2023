@@ -1,29 +1,27 @@
+using System.IO;
 using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
 using Avalonia.Media.Imaging;
-using System;
-using System.IO;
 
-namespace Mapster.ClientApplication
+namespace Mapster.ClientApplication;
+
+public partial class MapTile : Image
 {
-    public partial class MapTile : Image
+    public MapTile()
     {
-        public MapTile()
-        {
-            InitializeComponent();
-        }
+        InitializeComponent();
+    }
 
-        public MapTile(byte[] imageData, int size)
-        {
-            InitializeComponent();
+    public MapTile(byte[] imageData, int size)
+    {
+        InitializeComponent();
 
-            var stream = new MemoryStream(imageData);
-            Source = Bitmap.DecodeToHeight(stream, size);
-        }
+        var stream = new MemoryStream(imageData);
+        Source = Bitmap.DecodeToHeight(stream, size);
+    }
 
-        private void InitializeComponent()
-        {
-            AvaloniaXamlLoader.Load(this);
-        }
+    private void InitializeComponent()
+    {
+        AvaloniaXamlLoader.Load(this);
     }
 }

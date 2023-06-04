@@ -69,7 +69,7 @@ public unsafe class DataFile : IDisposable
     public void Dispose()
     {
         // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
-        Dispose(disposing: true);
+        Dispose(true);
         GC.SuppressFinalize(this);
     }
 
@@ -120,7 +120,8 @@ public unsafe class DataFile : IDisposable
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
     private ReadOnlySpan<Coordinate> GetCoordinates(ulong coordinateOffset, int ithCoordinate, int coordinateCount)
     {
-        return new ReadOnlySpan<Coordinate>(_ptr + coordinateOffset + ithCoordinate * CoordinateSizeInBytes, coordinateCount);
+        return new ReadOnlySpan<Coordinate>(_ptr + coordinateOffset + ithCoordinate * CoordinateSizeInBytes,
+            coordinateCount);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
@@ -131,12 +132,12 @@ public unsafe class DataFile : IDisposable
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-    private void GetProperty(ulong stringsOffset, ulong charsOffset, int i, out ReadOnlySpan<char> key, out ReadOnlySpan<char> value)
+    private void GetProperty(ulong stringsOffset, ulong charsOffset, int i, out ReadOnlySpan<char> key,
+        out ReadOnlySpan<char> value)
     {
         if (i % 2 != 0)
-        {
-            throw new ArgumentException("Properties are key-value pairs and start at even indices in the string list (i.e. i % 2 == 0)");
-        }
+            throw new ArgumentException(
+                "Properties are key-value pairs and start at even indices in the string list (i.e. i % 2 == 0)");
 
         GetString(stringsOffset, charsOffset, i, out key);
         GetString(stringsOffset, charsOffset, i + 1, out value);
@@ -145,46 +146,39 @@ public unsafe class DataFile : IDisposable
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
     public void ForeachFeature(BoundingBox b, MapFeatureDelegate? action)
     {
-        if (action == null)
-        {
-            return;
-        }
+        if (action == null) return;
 
         var tiles = TiligSystem.GetTilesForBoundingBox(b.MinLat, b.MinLon, b.MaxLat, b.MaxLon);
         for (var i = 0; i < tiles.Length; ++i)
         {
             var header = GetTile(tiles[i]);
-            if (header.Tile == null)
-            {
-                continue;
-            }
+            if (header.Tile == null) continue;
             for (var j = 0; j < header.Tile.Value.FeaturesCount; ++j)
             {
                 var feature = GetFeature(j, header.TileOffset);
-                var coordinates = GetCoordinates(header.Tile.Value.CoordinatesOffsetInBytes, feature->CoordinateOffset, feature->CoordinateCount);
+                var coordinates = GetCoordinates(header.Tile.Value.CoordinatesOffsetInBytes, feature->CoordinateOffset,
+                    feature->CoordinateCount);
                 var isFeatureInBBox = false;
 
                 for (var k = 0; k < coordinates.Length; ++k)
-                {
                     if (b.Contains(coordinates[k]))
                     {
                         isFeatureInBBox = true;
                         break;
                     }
-                }
 
                 var label = ReadOnlySpan<char>.Empty;
                 if (feature->LabelOffset >= 0)
-                {
-                    GetString(header.Tile.Value.StringsOffsetInBytes, header.Tile.Value.CharactersOffsetInBytes, feature->LabelOffset, out label);
-                }
+                    GetString(header.Tile.Value.StringsOffsetInBytes, header.Tile.Value.CharactersOffsetInBytes,
+                        feature->LabelOffset, out label);
 
                 if (isFeatureInBBox)
                 {
                     var properties = new Dictionary<string, string>(feature->PropertyCount);
                     for (var p = 0; p < feature->PropertyCount; ++p)
                     {
-                        GetProperty(header.Tile.Value.StringsOffsetInBytes, header.Tile.Value.CharactersOffsetInBytes, p * 2 + feature->PropertiesOffset, out var key, out var value);
+                        GetProperty(header.Tile.Value.StringsOffsetInBytes, header.Tile.Value.CharactersOffsetInBytes,
+                            p * 2 + feature->PropertiesOffset, out var key, out var value);
                         properties.Add(key.ToString(), value.ToString());
                     }
 
@@ -196,9 +190,7 @@ public unsafe class DataFile : IDisposable
                             Type = feature->GeometryType,
                             Properties = properties
                         }))
-                    {
                         break;
-                    }
                 }
             }
         }

@@ -10,19 +10,19 @@
         <AssemblyName>MapsterClientApplication</AssemblyName>
     </PropertyGroup>
     <ItemGroup>
-        <None Remove=".gitignore" />
+        <None Remove=".gitignore"/>
     </ItemGroup>
     <ItemGroup>
-        <TrimmableAssembly Include="Avalonia.Themes.Fluent" />
-        <TrimmableAssembly Include="Avalonia.Themes.Default" />
+        <TrimmableAssembly Include="Avalonia.Themes.Fluent"/>
+        <TrimmableAssembly Include="Avalonia.Themes.Default"/>
     </ItemGroup>
     <ItemGroup>
-        <PackageReference Include="Avalonia" Version="0.10.19" />
-        <PackageReference Include="Avalonia.Desktop" Version="0.10.19" />
-        <PackageReference Include="Avalonia.Diagnostics" Version="0.10.19" />
-        <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
-        <PackageReference Include="Newtonsoft.Json.Bson" Version="1.0.2" />
-        <PackageReference Include="XamlNameReferenceGenerator" Version="1.6.1" />
+        <PackageReference Include="Avalonia" Version="0.10.19"/>
+        <PackageReference Include="Avalonia.Desktop" Version="0.10.19"/>
+        <PackageReference Include="Avalonia.Diagnostics" Version="0.10.19"/>
+        <PackageReference Include="Newtonsoft.Json" Version="13.0.3"/>
+        <PackageReference Include="Newtonsoft.Json.Bson" Version="1.0.2"/>
+        <PackageReference Include="XamlNameReferenceGenerator" Version="1.6.1"/>
     </ItemGroup>
     <ItemGroup>
         <Compile Update="MapTile.axaml.cs">

@@ -1,4 +1,5 @@
 using System.Text.Json.Serialization;
+using OSMPBF;
 
 namespace OSMDataParser.Elements;
 
@@ -12,36 +13,71 @@ public abstract class AbstractNode : AbstractElementInternal
 
 internal class SimpleNode : AbstractNode
 {
-    private OSMPBF.Node _osmNode;
+    private readonly Node _osmNode;
     private TagList? _tags;
+
+    public SimpleNode(Node osmNode, PrimitiveBlock primitiveBlock)
+    {
+        _osmNode = osmNode;
+        Latitude = COORDINATE_FACTOR * (primitiveBlock.OffsetLatitude + primitiveBlock.Granularity * osmNode.Lat);
+        Longitude = COORDINATE_FACTOR * (primitiveBlock.OffsetLongitude + primitiveBlock.Granularity * osmNode.Lon);
+    }
 
     public override long Id => _osmNode.Id;
     public override double Latitude { get; }
     public override double Longitude { get; }
-    [JsonIgnore]
-    public override AbstractTagList Tags => _tags == null ? throw new InvalidDataException() : _tags;
 
-    public SimpleNode(OSMPBF.Node osmNode, PrimitiveBlock primitiveBlock)
-    {
-        _osmNode = osmNode;
-        Latitude = AbstractNode.COORDINATE_FACTOR * (primitiveBlock.OffsetLatitude + ((long)primitiveBlock.Granularity * osmNode.Lat));
-        Longitude = AbstractNode.COORDINATE_FACTOR * (primitiveBlock.OffsetLongitude + ((long)primitiveBlock.Granularity * osmNode.Lon));
-    }
+    [JsonIgnore] public override AbstractTagList Tags => _tags == null ? throw new InvalidDataException() : _tags;
 
     internal override void SetStringTable(StringTable stringTable)
     {
         _tags = new TagList(_osmNode.Keys, _osmNode.Vals, stringTable);
     }
-
 }
 
 internal class DenseNode : AbstractNode
 {
+    private readonly DenseTagList _tags;
+
+    public DenseNode(OSMPBF.DenseNodes osmDenseNodes, int index, int tagOffset, long previousId, long previousLat,
+        long previousLon, PrimitiveBlock primitiveBlock)
+    {
+        _tags = new DenseTagList(osmDenseNodes.KeysVals, tagOffset);
+
+        Id = previousId + osmDenseNodes.Id[index];
+
+        var latitude = previousLat + osmDenseNodes.Lat[index];
+        Latitude = COORDINATE_FACTOR * (primitiveBlock.OffsetLatitude + primitiveBlock.Granularity * latitude);
+
+        var longitude = previousLon + osmDenseNodes.Lon[index];
+        Longitude = COORDINATE_FACTOR * (primitiveBlock.OffsetLongitude + primitiveBlock.Granularity * longitude);
+    }
+
+    public override long Id { get; }
+    public override double Latitude { get; }
+    public override double Longitude { get; }
+    public override AbstractTagList Tags => _tags;
+
+    internal override void SetStringTable(StringTable stringTable)
+    {
+        _tags?.SetStringTable(stringTable);
+    }
+
     private class DenseTagList : AbstractTagList
     {
-        private IList<int> _keyValues;
-        private int _offset;
-        StringTable? _stringTable;
+        private readonly IList<int> _keyValues;
+        private readonly int _offset;
+        private StringTable? _stringTable;
+
+        public DenseTagList(IList<int> keyValues, int offset)
+        {
+            _keyValues = keyValues;
+            _offset = offset;
+
+            var count = 0;
+            for (var i = offset; i < keyValues.Count && keyValues[i] != 0; ++i, ++count) ;
+            Count = count / 2;
+        }
 
         public override KeyValuePair<string, string> this[int index]
         {
@@ -58,44 +94,9 @@ internal class DenseNode : AbstractNode
 
         public override int Count { get; }
 
-        public DenseTagList(IList<int> keyValues, int offset)
-        {
-            _keyValues = keyValues;
-            _offset = offset;
-
-            int count = 0;
-            for (int i = offset; i < keyValues.Count && keyValues[i] != 0; ++i, ++count) ;
-            Count = count / 2;
-        }
-
         public void SetStringTable(StringTable stringTable)
         {
             _stringTable = stringTable;
         }
-    }
-
-    private DenseTagList _tags;
-
-    public override long Id { get; }
-    public override double Latitude { get; }
-    public override double Longitude { get; }
-    public override AbstractTagList Tags => _tags;
-
-    public DenseNode(OSMPBF.DenseNodes osmDenseNodes, int index, int tagOffset, long previousId, long previousLat, long previousLon, PrimitiveBlock primitiveBlock)
-    {
-        _tags = new DenseTagList(osmDenseNodes.KeysVals, tagOffset);
-
-        Id = previousId + osmDenseNodes.Id[index];
-
-        var latitude = previousLat + osmDenseNodes.Lat[index];
-        Latitude = AbstractNode.COORDINATE_FACTOR * (primitiveBlock.OffsetLatitude + ((long)primitiveBlock.Granularity * latitude));
-
-        var longitude = previousLon + osmDenseNodes.Lon[index];
-        Longitude = AbstractNode.COORDINATE_FACTOR * (primitiveBlock.OffsetLongitude + ((long)primitiveBlock.Granularity * longitude));
-    }
-
-    internal override void SetStringTable(StringTable stringTable)
-    {
-        _tags?.SetStringTable(stringTable);
     }
 }

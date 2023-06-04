@@ -22,22 +22,22 @@ public static class Program
             switch (blob.Type)
             {
                 case BlobType.Primitive:
-                    {
-                        var primitiveBlock = blob.ToPrimitiveBlock();
-                        foreach (var primitiveGroup in primitiveBlock)
-                            switch (primitiveGroup.ContainedType)
-                            {
-                                case PrimitiveGroup.ElementType.Node:
-                                    foreach (var node in primitiveGroup) nodes[node.Id] = (AbstractNode)node;
-                                    break;
+                {
+                    var primitiveBlock = blob.ToPrimitiveBlock();
+                    foreach (var primitiveGroup in primitiveBlock)
+                        switch (primitiveGroup.ContainedType)
+                        {
+                            case PrimitiveGroup.ElementType.Node:
+                                foreach (var node in primitiveGroup) nodes[node.Id] = (AbstractNode)node;
+                                break;
 
-                                case PrimitiveGroup.ElementType.Way:
-                                    foreach (var way in primitiveGroup) ways.Add((Way)way);
-                                    break;
-                            }
+                            case PrimitiveGroup.ElementType.Way:
+                                foreach (var way in primitiveGroup) ways.Add((Way)way);
+                                break;
+                        }
 
-                        break;
-                    }
+                    break;
+                }
             }
         });
 
@@ -46,16 +46,12 @@ public static class Program
         {
             var tileId = TiligSystem.GetTile(new Coordinate(node.Latitude, node.Longitude));
             if (tiles.TryGetValue(tileId, out var nodeIds))
-            {
                 nodeIds.Add(id);
-            }
             else
-            {
                 tiles[tileId] = new List<long>
                 {
                     id
                 };
-            }
         }
 
         return new MapData
@@ -125,9 +121,7 @@ public static class Program
                 foreach (var tag in way.Tags)
                 {
                     if (tag.Key == "name")
-                    {
                         labels[^1] = totalPropertyCount * 2 + featureData.PropertyKeys.keys.Count * 2 + 1;
-                    }
                     featureData.PropertyKeys.keys.Add(tag.Key);
                     featureData.PropertyValues.values.Add(tag.Value);
                 }
@@ -135,21 +129,16 @@ public static class Program
                 foreach (var nodeId in way.NodeIds)
                 {
                     var node = mapData.Nodes[nodeId];
-                    if (TiligSystem.GetTile(new Coordinate(node.Latitude, node.Longitude)) != tileId)
-                    {
-                        continue;
-                    }
+                    if (TiligSystem.GetTile(new Coordinate(node.Latitude, node.Longitude)) != tileId) continue;
 
                     usedNodes.Add(nodeId);
 
                     foreach (var (key, value) in node.Tags)
-                    {
                         if (!featureData.PropertyKeys.keys.Contains(key))
                         {
                             featureData.PropertyKeys.keys.Add(key);
                             featureData.PropertyValues.values.Add(value);
                         }
-                    }
 
                     featureData.Coordinates.coordinates.Add(new Coordinate(node.Latitude, node.Longitude));
                 }
@@ -163,18 +152,14 @@ public static class Program
                 }
 
                 if (featureData.Coordinates.coordinates[0] == featureData.Coordinates.coordinates[^1])
-                {
                     geometryType = GeometryType.Polygon;
-                }
                 featureData.GeometryType = (byte)geometryType;
 
                 totalPropertyCount += featureData.PropertyKeys.keys.Count;
                 totalCoordinateCount += featureData.Coordinates.coordinates.Count;
 
                 if (featureData.PropertyKeys.keys.Count != featureData.PropertyValues.values.Count)
-                {
                     throw new InvalidDataContractException("Property keys and values should have the same count");
-                }
 
                 featureIds.Add(featureId);
                 featuresData.Add(featureId, featureData);
@@ -182,10 +167,7 @@ public static class Program
 
             foreach (var (nodeId, node) in mapData.Nodes.Where(n => !usedNodes.Contains(n.Key)))
             {
-                if (TiligSystem.GetTile(new Coordinate(node.Latitude, node.Longitude)) != tileId)
-                {
-                    continue;
-                }
+                if (TiligSystem.GetTile(new Coordinate(node.Latitude, node.Longitude)) != tileId) continue;
 
                 var featureId = Interlocked.Increment(ref featureIdCounter);
 
@@ -196,19 +178,14 @@ public static class Program
                 for (var i = 0; i < node.Tags.Count; ++i)
                 {
                     var tag = node.Tags[i];
-                    if (tag.Key == "name")
-                    {
-                        labels[^1] = totalPropertyCount * 2 + featurePropKeys.Count * 2 + 1;
-                    }
+                    if (tag.Key == "name") labels[^1] = totalPropertyCount * 2 + featurePropKeys.Count * 2 + 1;
 
                     featurePropKeys.Add(tag.Key);
                     featurePropValues.Add(tag.Value);
                 }
 
                 if (featurePropKeys.Count != featurePropValues.Count)
-                {
                     throw new InvalidDataContractException("Property keys and values should have the same count");
-                }
 
                 var fData = new FeatureData
                 {
@@ -216,7 +193,7 @@ public static class Program
                     GeometryType = (byte)GeometryType.Point,
                     Coordinates = (totalCoordinateCount, new List<Coordinate>
                     {
-                        new Coordinate(node.Latitude, node.Longitude)
+                        new(node.Latitude, node.Longitude)
                     }),
                     PropertyKeys = (totalPropertyCount, featurePropKeys),
                     PropertyValues = (totalPropertyCount, featurePropValues)
@@ -326,16 +303,10 @@ public static class Program
                 for (var i = 0; i < featureData.PropertyKeys.keys.Count; ++i)
                 {
                     ReadOnlySpan<char> k = featureData.PropertyKeys.keys[i];
-                    foreach (var c in k)
-                    {
-                        fileWriter.Write((short)c);
-                    }
+                    foreach (var c in k) fileWriter.Write((short)c);
 
                     ReadOnlySpan<char> v = featureData.PropertyValues.values[i];
-                    foreach (var c in v)
-                    {
-                        fileWriter.Write((short)c);
-                    }
+                    foreach (var c in v) fileWriter.Write((short)c);
                 }
             }
         }
@@ -357,10 +328,7 @@ public static class Program
         var argParseResult =
             Parser.Default.ParseArguments<Options>(args).WithParsed(options => { arguments = options; });
 
-        if (argParseResult.Errors.Any())
-        {
-            Environment.Exit(-1);
-        }
+        if (argParseResult.Errors.Any()) Environment.Exit(-1);
 
         var mapData = LoadOsmFile(arguments!.OsmPbfFilePath);
         CreateMapDataFile(ref mapData, arguments!.OutputFilePath!);

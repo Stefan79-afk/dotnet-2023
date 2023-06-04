@@ -36,7 +36,8 @@ public static class TiligSystem
     }
 
     // Retrieve all the tile ids that belong to a bounding box (defined by two coordinate pairs)
-    public static int[] GetTilesForBoundingBox(double minLatitude, double minLongitude, double maxLatitude, double maxLongitude)
+    public static int[] GetTilesForBoundingBox(double minLatitude, double minLongitude, double maxLatitude,
+        double maxLongitude)
     {
         var result = new List<int>();
 
@@ -46,13 +47,11 @@ public static class TiligSystem
         var maxLongitudeInt = (short)Math.Floor(maxLongitude);
 
         for (var i = minLatitudeInt; i <= maxLatitudeInt; ++i)
+        for (var j = minLongitudeInt; j <= maxLongitudeInt; ++j)
         {
-            for (var j = minLongitudeInt; j <= maxLongitudeInt; ++j)
-            {
-                var tileId = i << 16;
-                tileId |= (ushort)j;
-                result.Add(tileId);
-            }
+            var tileId = i << 16;
+            tileId |= (ushort)j;
+            result.Add(tileId);
         }
 
         return result.ToArray();

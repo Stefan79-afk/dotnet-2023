@@ -11,4 +11,3 @@ public class Unknown : AbstractElementInternal
         throw new NotImplementedException();
     }
 }
-

@@ -6,13 +6,17 @@ namespace Mapster.ClientApplication;
 // (https://docs.microsoft.com/en-us/dotnet/api/system.componentmodel.inotifypropertychanged?view=net-6.0)
 public class DataModel : INotifyPropertyChanged
 {
-    public event PropertyChangedEventHandler? PropertyChanged;
-
     private string _data;
+
+    public DataModel(string initialValue = "Default value")
+    {
+        _data = initialValue;
+    }
+
     // Set up the property to invoke the event when the setter changes the value
     public string Data
     {
-        get { return _data; }
+        get => _data;
         set
         {
             if (_data != value)
@@ -23,8 +27,5 @@ public class DataModel : INotifyPropertyChanged
         }
     }
 
-    public DataModel(string initialValue = "Default value")
-    {
-        _data = initialValue;
-    }
+    public event PropertyChangedEventHandler? PropertyChanged;
 }

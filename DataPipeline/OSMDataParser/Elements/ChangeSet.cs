@@ -1,4 +1,3 @@
-
 namespace OSMDataParser.Elements;
 
 public class ChangeSet : AbstractElementInternal

@@ -4,8 +4,14 @@ namespace OSMDataParser;
 
 public class PrimitiveBlock : IReadOnlyList<PrimitiveGroup>
 {
-    private OSMPBF.PrimitiveBlock _osmPrimitiveBlock;
-    private StringTable _stringTable;
+    private readonly OSMPBF.PrimitiveBlock _osmPrimitiveBlock;
+    private readonly StringTable _stringTable;
+
+    public PrimitiveBlock(Blob blob)
+    {
+        _osmPrimitiveBlock = Detail.DeserializeContent<OSMPBF.PrimitiveBlock>(blob);
+        _stringTable = new StringTable(_osmPrimitiveBlock.Stringtable.S);
+    }
 
     // Granularity, units of nanodegrees, used to store coordinates in this block
     public int Granularity => _osmPrimitiveBlock.Granularity;
@@ -28,12 +34,6 @@ public class PrimitiveBlock : IReadOnlyList<PrimitiveGroup>
 
     public int Count => _osmPrimitiveBlock.Primitivegroup.Count;
 
-    public PrimitiveBlock(Blob blob)
-    {
-        _osmPrimitiveBlock = Detail.DeserializeContent<OSMPBF.PrimitiveBlock>(blob);
-        _stringTable = new StringTable(_osmPrimitiveBlock.Stringtable.S);
-    }
-
     public IEnumerator<PrimitiveGroup> GetEnumerator()
     {
         return new PrimitiveGroupEnumerator(this, _osmPrimitiveBlock.Primitivegroup.Count);
@@ -47,35 +47,41 @@ public class PrimitiveBlock : IReadOnlyList<PrimitiveGroup>
 
 public class PrimitiveGroupEnumerator : IEnumerator<PrimitiveGroup>
 {
-    private bool _disposedValue = false;
-    private PrimitiveGroup _currentPrimitiveGroup;
-    private PrimitiveBlock _primitiveBlock;
-    private int _groupCount = 0;
-    private int _currentIndex = 0;
-
-    public PrimitiveGroup Current => _currentPrimitiveGroup;
-
-    object IEnumerator.Current => Current;
+    private int _currentIndex;
+    private bool _disposedValue;
+    private readonly int _groupCount;
+    private readonly PrimitiveBlock _primitiveBlock;
 
     public PrimitiveGroupEnumerator(PrimitiveBlock primitiveBlock, int primitiveGroupCount)
     {
         _primitiveBlock = primitiveBlock;
         _groupCount = primitiveGroupCount;
-        _currentPrimitiveGroup = new PrimitiveGroup(primitiveBlock);
+        Current = new PrimitiveGroup(primitiveBlock);
     }
+
+    public PrimitiveGroup Current { get; private set; }
+
+    object IEnumerator.Current => Current;
 
     public bool MoveNext()
     {
         if (_currentIndex >= _groupCount)
             return false;
 
-        _currentPrimitiveGroup = _primitiveBlock[_currentIndex++];
+        Current = _primitiveBlock[_currentIndex++];
         return true;
     }
 
     public void Reset()
     {
         _currentIndex = 0;
+    }
+
+    public void Dispose()
+    {
+        // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
+        Dispose(true);
+        GC.SuppressFinalize(this);
     }
 
     protected virtual void Dispose(bool disposing)
@@ -88,12 +94,5 @@ public class PrimitiveGroupEnumerator : IEnumerator<PrimitiveGroup>
 
             _disposedValue = true;
         }
-    }
-
-    public void Dispose()
-    {
-        // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
-        Dispose(disposing: true);
-        GC.SuppressFinalize(this);
     }
 }

@@ -1,7 +1,6 @@
 using System.IO.Compression;
 using System.Text.Json.Serialization;
-
-using Protobuf = Google.Protobuf;
+using Google.Protobuf;
 
 namespace OSMDataParser;
 
@@ -32,17 +31,17 @@ public struct Feature
 
 public class Blob
 {
-    public BlobType Type { get; }
-    public bool IsCompressed { get; }
-    [JsonIgnore]
-    public ReadOnlyMemory<Byte> Content { get; }
-
-    public Blob(BlobType type = BlobType.Unknown, bool isCompressed = false, ReadOnlyMemory<Byte> content = new ReadOnlyMemory<byte>())
+    public Blob(BlobType type = BlobType.Unknown, bool isCompressed = false, ReadOnlyMemory<byte> content = new())
     {
         Type = type;
         IsCompressed = isCompressed;
         Content = content;
     }
+
+    public BlobType Type { get; }
+    public bool IsCompressed { get; }
+
+    [JsonIgnore] public ReadOnlyMemory<byte> Content { get; }
 
     public HeaderBlock ToHeaderBlock()
     {
@@ -55,27 +54,22 @@ public class Blob
     }
 }
 
-class Detail
+internal class Detail
 {
-    internal static T DeserializeContent<T>(Blob blob) where T : Protobuf.IMessage<T>, new()
+    internal static T DeserializeContent<T>(Blob blob) where T : IMessage<T>, new()
     {
         var data = blob.Content.Span;
 
         if (!blob.IsCompressed)
+            return new MessageParser<T>(() => new T()).ParseFrom(data);
+        unsafe
         {
-            return (new Protobuf.MessageParser<T>(() => new T())).ParseFrom(data);
-        }
-        else
-        {
-            unsafe
+            fixed (byte* buffer = &data[0])
             {
-                fixed (byte* buffer = &data[0])
+                using (var stream = new UnmanagedMemoryStream(buffer, data.Length))
+                using (var zlibStream = new ZLibStream(stream, CompressionMode.Decompress))
                 {
-                    using (var stream = new UnmanagedMemoryStream(buffer, data.Length))
-                    using (var zlibStream = new ZLibStream(stream, CompressionMode.Decompress))
-                    {
-                        return (new Protobuf.MessageParser<T>(() => new T())).ParseFrom(zlibStream);
-                    }
+                    return new MessageParser<T>(() => new T()).ParseFrom(zlibStream);
                 }
             }
         }

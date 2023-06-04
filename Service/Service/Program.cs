@@ -15,15 +15,10 @@ internal static class Program
     private static async Task Main(string[] args)
     {
         Options? arguments = null;
-        var argParseResult = Parser.Default.ParseArguments<Options>(args).WithParsed(options =>
-        {
-            arguments = options;
-        });
+        var argParseResult =
+            Parser.Default.ParseArguments<Options>(args).WithParsed(options => { arguments = options; });
 
-        if (argParseResult.Errors.Any())
-        {
-            Environment.Exit(-1);
-        }
+        if (argParseResult.Errors.Any()) Environment.Exit(-1);
 
         // Set up a builder to help register our endpoint handlers
         var appBuilder = WebApplication.CreateBuilder();
