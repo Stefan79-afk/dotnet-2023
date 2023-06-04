@@ -6,7 +6,7 @@ using SixLabors.ImageSharp.Processing;
 
 namespace Mapster.Rendering;
 
-public struct GeoFeature : BaseShape
+public struct GeoFeature : IBaseShape
 {
     public enum GeoFeatureType
     {
@@ -51,7 +51,7 @@ public struct GeoFeature : BaseShape
 
     public bool IsPolygon { get; set; }
     public PointF[] ScreenCoordinates { get; set; }
-    public GeoFeatureType Type { get; set; }
+    private GeoFeatureType Type { get; set; }
 
     public void Render(IImageProcessingContext context)
     {
@@ -101,8 +101,8 @@ public struct GeoFeature : BaseShape
         Type = type;
         ScreenCoordinates = new PointF[c.Length];
         for (var i = 0; i < c.Length; i++)
-            ScreenCoordinates[i] = new PointF((float)MercatorProjection.lonToX(c[i].Longitude),
-                (float)MercatorProjection.latToY(c[i].Latitude));
+            ScreenCoordinates[i] = new PointF((float)MercatorProjection.LonToX(c[i].Longitude),
+                (float)MercatorProjection.LatToY(c[i].Latitude));
     }
 
     public GeoFeature(ReadOnlySpan<Coordinate> c, MapFeatureData feature)
@@ -134,12 +134,12 @@ public struct GeoFeature : BaseShape
 
         ScreenCoordinates = new PointF[c.Length];
         for (var i = 0; i < c.Length; i++)
-            ScreenCoordinates[i] = new PointF((float)MercatorProjection.lonToX(c[i].Longitude),
-                (float)MercatorProjection.latToY(c[i].Latitude));
+            ScreenCoordinates[i] = new PointF((float)MercatorProjection.LonToX(c[i].Longitude),
+                (float)MercatorProjection.LatToY(c[i].Latitude));
     }
 }
 
-public struct Railway : BaseShape
+public struct Railway : IBaseShape
 {
     public int ZIndex { get; set; } = 45;
     public bool IsPolygon { get; set; }
@@ -161,18 +161,18 @@ public struct Railway : BaseShape
         IsPolygon = false;
         ScreenCoordinates = new PointF[c.Length];
         for (var i = 0; i < c.Length; i++)
-            ScreenCoordinates[i] = new PointF((float)MercatorProjection.lonToX(c[i].Longitude),
-                (float)MercatorProjection.latToY(c[i].Latitude));
+            ScreenCoordinates[i] = new PointF((float)MercatorProjection.LonToX(c[i].Longitude),
+                (float)MercatorProjection.LatToY(c[i].Latitude));
     }
 }
 
-public struct PopulatedPlace : BaseShape
+public struct PopulatedPlace : IBaseShape
 {
     public int ZIndex { get; set; } = 60;
     public bool IsPolygon { get; set; }
     public PointF[] ScreenCoordinates { get; set; }
-    public string Name { get; set; }
-    public bool ShouldRender { get; set; }
+    private string Name { get; set; }
+    private bool ShouldRender { get; set; }
 
     public void Render(IImageProcessingContext context)
     {
@@ -186,8 +186,8 @@ public struct PopulatedPlace : BaseShape
         IsPolygon = false;
         ScreenCoordinates = new PointF[c.Length];
         for (var i = 0; i < c.Length; i++)
-            ScreenCoordinates[i] = new PointF((float)MercatorProjection.lonToX(c[i].Longitude),
-                (float)MercatorProjection.latToY(c[i].Latitude));
+            ScreenCoordinates[i] = new PointF((float)MercatorProjection.LonToX(c[i].Longitude),
+                (float)MercatorProjection.LatToY(c[i].Latitude));
         var name = feature.Properties.FirstOrDefault(x => x.Key == "name").Value;
 
         if (feature.Label.IsEmpty)
@@ -215,7 +215,7 @@ public struct PopulatedPlace : BaseShape
     }
 }
 
-public struct Border : BaseShape
+public struct Border : IBaseShape
 {
     public int ZIndex { get; set; } = 30;
     public bool IsPolygon { get; set; }
@@ -232,8 +232,8 @@ public struct Border : BaseShape
         IsPolygon = false;
         ScreenCoordinates = new PointF[c.Length];
         for (var i = 0; i < c.Length; i++)
-            ScreenCoordinates[i] = new PointF((float)MercatorProjection.lonToX(c[i].Longitude),
-                (float)MercatorProjection.latToY(c[i].Latitude));
+            ScreenCoordinates[i] = new PointF((float)MercatorProjection.LonToX(c[i].Longitude),
+                (float)MercatorProjection.LatToY(c[i].Latitude));
     }
 
     public static bool ShouldBeBorder(MapFeatureData feature)
@@ -252,7 +252,7 @@ public struct Border : BaseShape
     }
 }
 
-public struct Waterway : BaseShape
+public struct Waterway : IBaseShape
 {
     public int ZIndex { get; set; } = 40;
     public bool IsPolygon { get; set; }
@@ -276,12 +276,12 @@ public struct Waterway : BaseShape
         IsPolygon = isPolygon;
         ScreenCoordinates = new PointF[c.Length];
         for (var i = 0; i < c.Length; i++)
-            ScreenCoordinates[i] = new PointF((float)MercatorProjection.lonToX(c[i].Longitude),
-                (float)MercatorProjection.latToY(c[i].Latitude));
+            ScreenCoordinates[i] = new PointF((float)MercatorProjection.LonToX(c[i].Longitude),
+                (float)MercatorProjection.LatToY(c[i].Latitude));
     }
 }
 
-public struct Road : BaseShape
+public struct Road : IBaseShape
 {
     public int ZIndex { get; set; } = 50;
     public bool IsPolygon { get; set; }
@@ -303,12 +303,12 @@ public struct Road : BaseShape
         IsPolygon = isPolygon;
         ScreenCoordinates = new PointF[c.Length];
         for (var i = 0; i < c.Length; i++)
-            ScreenCoordinates[i] = new PointF((float)MercatorProjection.lonToX(c[i].Longitude),
-                (float)MercatorProjection.latToY(c[i].Latitude));
+            ScreenCoordinates[i] = new PointF((float)MercatorProjection.LonToX(c[i].Longitude),
+                (float)MercatorProjection.LatToY(c[i].Latitude));
     }
 }
 
-public interface BaseShape
+public interface IBaseShape
 {
     public int ZIndex { get; set; }
     public bool IsPolygon { get; set; }

@@ -39,7 +39,7 @@ internal class TileEndpoint : IDisposable
                 MaxX = float.MinValue,
                 MaxY = float.MinValue
             };
-            var shapes = new PriorityQueue<BaseShape, int>();
+            var shapes = new PriorityQueue<IBaseShape, int>();
             tileEndpoint._mapData.ForeachFeature(
                 new BoundingBox(
                     new Coordinate(minLat, minLon),
@@ -53,13 +53,13 @@ internal class TileEndpoint : IDisposable
             );
 
             context.Response.ContentType = "image/png";
-            await tileEndpoint.RenderPng(context.Response.BodyWriter.AsStream(), pixelBb, shapes, size.Value,
+            await RenderPng(context.Response.BodyWriter.AsStream(), pixelBb, shapes, size.Value,
                 size.Value);
         }
     }
 
-    private async Task RenderPng(Stream outputStream, TileRenderer.BoundingBox boundingBox,
-        PriorityQueue<BaseShape, int> shapes, int width, int height)
+    private static async Task RenderPng(Stream outputStream, TileRenderer.BoundingBox boundingBox,
+        PriorityQueue<IBaseShape, int> shapes, int width, int height)
     {
         var canvas = await Task.Run(() => { return shapes.Render(boundingBox, width, height); }).ConfigureAwait(false);
 
