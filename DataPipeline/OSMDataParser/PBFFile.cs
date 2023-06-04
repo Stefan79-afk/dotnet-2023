@@ -5,12 +5,12 @@ using OSMPBF;
 
 namespace OSMDataParser;
 
-public class PBFFile : IEnumerable<Blob>
+public class PbfFile : IEnumerable<Blob>
 {
-    private bool _disposedValue;
     private readonly FileStream _fileStream;
+    private bool _disposedValue;
 
-    public PBFFile(ReadOnlySpan<char> filePath)
+    public PbfFile(ReadOnlySpan<char> filePath)
     {
         _fileStream = File.OpenRead(filePath.ToString());
     }
@@ -45,13 +45,13 @@ public class PBFFile : IEnumerable<Blob>
 
 public class BlobEnumerator : IEnumerator<Blob>
 {
-    private const int MAX_BLOB_HEADER_SIZE = 64 * 1024;
-    private const int MAX_BLOB_MESSAGE_SIZE = 32 * 1024 * 1024;
+    private const int MaxBlobHeaderSize = 64 * 1024;
+    private const int MaxBlobMessageSize = 32 * 1024 * 1024;
 
-    private static readonly ThreadLocal<byte[]> _headerSizeBuffer = new(() => new byte[4]);
+    private static readonly ThreadLocal<byte[]> HeaderSizeBuffer = new(() => new byte[4]);
+    private readonly Stream _stream;
 
     private bool _disposedValue;
-    private readonly Stream _stream;
 
     public BlobEnumerator(Stream stream)
     {
@@ -75,19 +75,25 @@ public class BlobEnumerator : IEnumerator<Blob>
             throw new IndexOutOfRangeException(
                 $"Not enough bytes to read header size at position {stream.Position}; expected 4 bytes -> available {remainingBytes} bytes");
 
-        var headerSizeBuffer = _headerSizeBuffer.Value!;
-        stream.Read(headerSizeBuffer, 0, headerSizeBuffer.Length);
+        var headerSizeBuffer = HeaderSizeBuffer.Value!;
+        var bytesSize = stream.Read(headerSizeBuffer, 0, headerSizeBuffer.Length);
+        
+        if(bytesSize < headerSizeBuffer.Length)
+        {
+            Console.WriteLine("Fewer bytes were read than requested:" + bytesSize.ToString() + " read vs " + headerSizeBuffer.Length.ToString() + " requested");
+        }
+        
         var headerSize = (int)BinaryPrimitives.ReadUInt32BigEndian(headerSizeBuffer.AsSpan());
 
-        if (headerSize >= MAX_BLOB_HEADER_SIZE)
+        if (headerSize >= MaxBlobHeaderSize)
             throw new ArgumentOutOfRangeException(
-                $"Header is too large. Header size {headerSize} exceeds the maximum of {MAX_BLOB_HEADER_SIZE} bytes");
+                $"Header is too large. Header size {headerSize} exceeds the maximum of {MaxBlobHeaderSize} bytes");
 
         var blobHeader = DeserializeMessage<BlobHeader>(stream, headerSize);
 
-        if (blobHeader.Datasize >= MAX_BLOB_MESSAGE_SIZE)
+        if (blobHeader.Datasize >= MaxBlobMessageSize)
             throw new ArgumentOutOfRangeException(
-                $"Blob is too large. Blob size {blobHeader.Datasize} exceeds the maximum of {MAX_BLOB_MESSAGE_SIZE} bytes");
+                $"Blob is too large. Blob size {blobHeader.Datasize} exceeds the maximum of {MaxBlobMessageSize} bytes");
 
         var protoBlob = DeserializeMessage<OSMPBF.Blob>(stream, blobHeader.Datasize);
         var blobType = BlobType.Unknown;
@@ -156,11 +162,15 @@ public class BlobEnumerator : IEnumerator<Blob>
         if (remainingBytes < size)
             throw new IndexOutOfRangeException(
                 $"Not enough bytes to read data at position {stream.Position}. Expected {size} bytes -> available {remainingBytes} bytes");
-
-        T result;
+        
         var buffer = new byte[size];
-        stream.Read(buffer, 0, size);
-        result = new MessageParser<T>(() => new T()).ParseFrom(new ReadOnlySpan<byte>(buffer));
+        var bytesRead = stream.Read(buffer, 0, size);
+        
+        if(bytesRead < size)
+        {
+            Console.WriteLine("Fewer bytes were read than requested:" + bytesRead.ToString() + " read vs " + size.ToString() + " requested");
+        }
+        var result = new MessageParser<T>(() => new T()).ParseFrom(new ReadOnlySpan<byte>(buffer));
 
         return result;
     }

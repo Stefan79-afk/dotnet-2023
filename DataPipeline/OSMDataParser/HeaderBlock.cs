@@ -18,7 +18,7 @@ public class HeaderBlock
     public Feature[] RequiredFeatures { get; }
     public HeaderBBox BoundingBox { get; }
 
-    private Feature[] ExtractFeatures(RepeatedField<string> featureList)
+    private static Feature[] ExtractFeatures(IReadOnlyList<string> featureList)
     {
         var result = new Feature[featureList.Count];
         for (var i = 0; i < result.Length; ++i)

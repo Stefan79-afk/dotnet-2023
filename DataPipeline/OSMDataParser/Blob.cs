@@ -11,7 +11,7 @@ public enum BlobType
     Primitive
 }
 
-public struct Feature
+public readonly struct Feature
 {
     public const int Unknown = 0;
     public const int OsmSchemaV06 = 1;
@@ -19,7 +19,7 @@ public struct Feature
     public const int HistoricalInformation = 3;
 
     public bool IsDefined => Value != Unknown;
-    public int Value { get; }
+    private int Value { get; }
     public string? Name { get; }
 
     public Feature(int value = Unknown, string? name = null)

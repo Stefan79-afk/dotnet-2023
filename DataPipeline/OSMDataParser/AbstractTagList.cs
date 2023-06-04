@@ -23,10 +23,10 @@ public abstract class AbstractTagList : IReadOnlyList<Tag>
 
 public class TagEnumerator : IEnumerator<Tag>
 {
-    private int _currentIndex;
-    private bool _disposedValue;
     private readonly int _tagCount;
     private readonly AbstractTagList _tagList;
+    private int _currentIndex;
+    private bool _disposedValue;
 
     public TagEnumerator(AbstractTagList tagList)
     {

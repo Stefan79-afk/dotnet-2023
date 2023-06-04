@@ -15,7 +15,7 @@ public class TestBlob
         var nodes = new ConcurrentDictionary<long, AbstractNode>();
         var ways = new ConcurrentBag<Way>();
 
-        foreach (var blob in new PBFFile("MapData/andorra-10032022.osm.pbf"))
+        foreach (var blob in new PbfFile("MapData/andorra-10032022.osm.pbf"))
             switch (blob.Type)
             {
                 case BlobType.Primitive:
@@ -24,11 +24,11 @@ public class TestBlob
                     foreach (var primitiveGroup in primitiveBlock)
                         switch (primitiveGroup.ContainedType)
                         {
-                            case PrimitiveGroup.ElementType.Node:
+                            case ElementType.Node:
                                 foreach (var node in primitiveGroup) nodes[node.Id] = (AbstractNode)node;
                                 break;
 
-                            case PrimitiveGroup.ElementType.Way:
+                            case ElementType.Way:
                                 foreach (var way in primitiveGroup) ways.Add((Way)way);
                                 break;
                         }

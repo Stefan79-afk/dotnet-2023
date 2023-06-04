@@ -5,15 +5,7 @@ namespace OSMDataParser;
 
 public class PrimitiveGroup : IEnumerable<AbstractElement>
 {
-    public enum ElementType
-    {
-        Unknown,
-        Node,
-        Way,
-        Relation,
-        ChangeSet
-    }
-
+    
     private readonly DenseNodes? _denseNodes;
 
     private readonly OSMPBF.PrimitiveGroup _osmPrimitiveGroup;
@@ -120,11 +112,11 @@ public class PrimitiveGroup : IEnumerable<AbstractElement>
 
 public class ElementEnumerator : IEnumerator<AbstractElement>
 {
+    private readonly int _elementCount;
+    private readonly PrimitiveGroup _primitiveGroup;
     private AbstractElementInternal _currentElement = new Unknown();
     private int _currentIndex;
     private bool _disposedValue;
-    private readonly int _elementCount;
-    private readonly PrimitiveGroup _primitiveGroup;
 
     public ElementEnumerator(PrimitiveGroup primitiveGroup)
     {

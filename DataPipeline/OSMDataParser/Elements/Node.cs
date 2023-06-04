@@ -5,7 +5,7 @@ namespace OSMDataParser.Elements;
 
 public abstract class AbstractNode : AbstractElementInternal
 {
-    protected const double COORDINATE_FACTOR = .000000001;
+    protected const double CoordinateFactor = .000000001;
 
     public abstract double Latitude { get; }
     public abstract double Longitude { get; }
@@ -19,8 +19,8 @@ internal class SimpleNode : AbstractNode
     public SimpleNode(Node osmNode, PrimitiveBlock primitiveBlock)
     {
         _osmNode = osmNode;
-        Latitude = COORDINATE_FACTOR * (primitiveBlock.OffsetLatitude + primitiveBlock.Granularity * osmNode.Lat);
-        Longitude = COORDINATE_FACTOR * (primitiveBlock.OffsetLongitude + primitiveBlock.Granularity * osmNode.Lon);
+        Latitude = CoordinateFactor * (primitiveBlock.OffsetLatitude + primitiveBlock.Granularity * osmNode.Lat);
+        Longitude = CoordinateFactor * (primitiveBlock.OffsetLongitude + primitiveBlock.Granularity * osmNode.Lon);
     }
 
     public override long Id => _osmNode.Id;
@@ -47,10 +47,10 @@ internal class DenseNode : AbstractNode
         Id = previousId + osmDenseNodes.Id[index];
 
         var latitude = previousLat + osmDenseNodes.Lat[index];
-        Latitude = COORDINATE_FACTOR * (primitiveBlock.OffsetLatitude + primitiveBlock.Granularity * latitude);
+        Latitude = CoordinateFactor * (primitiveBlock.OffsetLatitude + primitiveBlock.Granularity * latitude);
 
         var longitude = previousLon + osmDenseNodes.Lon[index];
-        Longitude = COORDINATE_FACTOR * (primitiveBlock.OffsetLongitude + primitiveBlock.Granularity * longitude);
+        Longitude = CoordinateFactor * (primitiveBlock.OffsetLongitude + primitiveBlock.Granularity * longitude);
     }
 
     public override long Id { get; }

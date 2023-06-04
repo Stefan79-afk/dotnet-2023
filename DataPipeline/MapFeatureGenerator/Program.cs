@@ -17,7 +17,7 @@ public static class Program
         var nodes = new ConcurrentDictionary<long, AbstractNode>();
         var ways = new ConcurrentBag<Way>();
 
-        Parallel.ForEach(new PBFFile(osmFilePath), (blob, _) =>
+        Parallel.ForEach(new PbfFile(osmFilePath), (blob, _) =>
         {
             switch (blob.Type)
             {
@@ -27,11 +27,11 @@ public static class Program
                     foreach (var primitiveGroup in primitiveBlock)
                         switch (primitiveGroup.ContainedType)
                         {
-                            case PrimitiveGroup.ElementType.Node:
+                            case ElementType.Node:
                                 foreach (var node in primitiveGroup) nodes[node.Id] = (AbstractNode)node;
                                 break;
 
-                            case PrimitiveGroup.ElementType.Way:
+                            case ElementType.Way:
                                 foreach (var way in primitiveGroup) ways.Add((Way)way);
                                 break;
                         }
@@ -334,7 +334,7 @@ public static class Program
         CreateMapDataFile(ref mapData, arguments!.OutputFilePath!);
     }
 
-    public class Options
+    private class Options
     {
         [Option('i', "input", Required = true, HelpText = "Input osm.pbf file")]
         public string? OsmPbfFilePath { get; set; }

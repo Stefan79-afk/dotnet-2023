@@ -13,10 +13,10 @@ public class PrimitiveBlock : IReadOnlyList<PrimitiveGroup>
         _stringTable = new StringTable(_osmPrimitiveBlock.Stringtable.S);
     }
 
-    // Granularity, units of nanodegrees, used to store coordinates in this block
+    // Granularity, units of nano-degrees, used to store coordinates in this block
     public int Granularity => _osmPrimitiveBlock.Granularity;
 
-    // Offset value between the output coordinates coordinates and the granularity grid, in units of nanodegrees.
+    // Offset value between the output coordinates coordinates and the granularity grid, in units of nano-degrees.
     public int DateGranularity => _osmPrimitiveBlock.DateGranularity;
     public long OffsetLatitude => _osmPrimitiveBlock.LatOffset;
 
@@ -47,10 +47,10 @@ public class PrimitiveBlock : IReadOnlyList<PrimitiveGroup>
 
 public class PrimitiveGroupEnumerator : IEnumerator<PrimitiveGroup>
 {
-    private int _currentIndex;
-    private bool _disposedValue;
     private readonly int _groupCount;
     private readonly PrimitiveBlock _primitiveBlock;
+    private int _currentIndex;
+    private bool _disposedValue;
 
     public PrimitiveGroupEnumerator(PrimitiveBlock primitiveBlock, int primitiveGroupCount)
     {

@@ -4,14 +4,14 @@ namespace OSMDataParser;
 
 internal class DenseNodes
 {
+    private readonly OSMPBF.DenseNodes _osmDenseNodes;
+    private readonly PrimitiveBlock _primitiveBlock;
     private long _lastNodeIdDecoded;
     private long _lastNodeLatDecoded;
     private long _lastNodeLonDecoded;
     private int _nextNodeIndex;
 
     private int _nextTagIndex;
-    private readonly OSMPBF.DenseNodes _osmDenseNodes;
-    private readonly PrimitiveBlock _primitiveBlock;
 
     public DenseNodes(OSMPBF.DenseNodes osmDenseNodes, PrimitiveBlock primitiveBlock)
     {

@@ -39,9 +39,9 @@ internal class StringTable : IReadOnlyList<string>
 internal class StringTableEnumerator : IEnumerator<string>
 {
     private readonly int _count;
+    private readonly StringTable _stringTable;
     private int _currentIndex;
     private bool _disposedValue;
-    private readonly StringTable _stringTable;
 
     public StringTableEnumerator(StringTable stringTable)
     {
