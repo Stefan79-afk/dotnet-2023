@@ -1,11 +1,11 @@
 namespace Mapster.Common.MemoryMappedTypes;
 
-public struct BoundingBox
+public readonly struct BoundingBox
 {
-    public double MinLat;
-    public double MaxLat;
-    public double MinLon;
-    public double MaxLon;
+    public readonly double MinLat;
+    public readonly double MaxLat;
+    public readonly double MinLon;
+    public readonly double MaxLon;
 
     public BoundingBox(Coordinate min, Coordinate max)
     {

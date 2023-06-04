@@ -5,43 +5,43 @@ namespace Mapster.Common.MemoryMappedTypes;
 [StructLayout(LayoutKind.Explicit, Pack = 1)]
 public struct FileHeader
 {
-    [FieldOffset(0)] public long Version;
-    [FieldOffset(8)] public int TileCount;
+    [FieldOffset(0)] private readonly long Version;
+    [FieldOffset(8)] public readonly int TileCount;
 }
 
 [StructLayout(LayoutKind.Explicit, Pack = 1)]
 public struct TileHeaderEntry
 {
-    [FieldOffset(0)] public int ID;
-    [FieldOffset(4)] public ulong OffsetInBytes;
+    [FieldOffset(0)] public readonly int ID;
+    [FieldOffset(4)] public readonly ulong OffsetInBytes;
 }
 
 [StructLayout(LayoutKind.Explicit, Pack = 1)]
 public struct TileBlockHeader
 {
     /// <summary>
-    ///     Number of renderable features in the tile.
+    ///     Number of render-able features in the tile.
     /// </summary>
-    [FieldOffset(0)] public int FeaturesCount;
+    [FieldOffset(0)] public readonly int FeaturesCount;
 
     /// <summary>
     ///     Number of coordinates used for the features in the tile.
     /// </summary>
-    [FieldOffset(4)] public int CoordinatesCount;
+    [FieldOffset(4)] private readonly int CoordinatesCount;
 
     /// <summary>
     ///     Number of strings used for the features in the tile.
     /// </summary>
-    [FieldOffset(8)] public int StringCount;
+    [FieldOffset(8)] private readonly int StringCount;
 
     /// <summary>
     ///     Number of characters used by the strings in the tile.
     /// </summary>
-    [FieldOffset(12)] public int CharactersCount;
+    [FieldOffset(12)] private readonly int CharactersCount;
 
-    [FieldOffset(16)] public ulong CoordinatesOffsetInBytes;
-    [FieldOffset(24)] public ulong StringsOffsetInBytes;
-    [FieldOffset(32)] public ulong CharactersOffsetInBytes;
+    [FieldOffset(16)] public readonly ulong CoordinatesOffsetInBytes;
+    [FieldOffset(24)] public readonly ulong StringsOffsetInBytes;
+    [FieldOffset(32)] public readonly ulong CharactersOffsetInBytes;
 }
 
 /// <summary>
@@ -50,15 +50,15 @@ public struct TileBlockHeader
 [StructLayout(LayoutKind.Explicit, Pack = 1)]
 public struct StringEntry
 {
-    [FieldOffset(0)] public int Offset;
-    [FieldOffset(4)] public int Length;
+    [FieldOffset(0)] public readonly int Offset;
+    [FieldOffset(4)] public readonly int Length;
 }
 
 [StructLayout(LayoutKind.Explicit, Pack = 1)]
-public struct Coordinate
+public readonly struct Coordinate
 {
-    [FieldOffset(0)] public double Latitude;
-    [FieldOffset(8)] public double Longitude;
+    [FieldOffset(0)] public readonly double Latitude;
+    [FieldOffset(8)] public readonly double Longitude;
 
     public Coordinate()
     {
@@ -72,7 +72,7 @@ public struct Coordinate
         Longitude = longitude;
     }
 
-    public bool Equals(Coordinate other)
+    private bool Equals(Coordinate other)
     {
         return Math.Abs(Latitude - other.Latitude) < double.Epsilon &&
                Math.Abs(Longitude - other.Longitude) < double.Epsilon;
@@ -109,24 +109,24 @@ public enum GeometryType : byte
 [StructLayout(LayoutKind.Explicit, Pack = 1)]
 public struct PropertyEntryList
 {
-    [FieldOffset(0)] public int Count;
-    [FieldOffset(4)] public ulong OffsetInBytes;
+    [FieldOffset(0)] private readonly int Count;
+    [FieldOffset(4)] private readonly ulong OffsetInBytes;
 }
 
 [StructLayout(LayoutKind.Explicit, Pack = 1)]
 public struct MapFeature
 {
     // https://wiki.openstreetmap.org/wiki/Key:highway
-    public static string[] HighwayTypes =
+    private static readonly string[] HighwayTypes =
     {
         "motorway", "trunk", "primary", "secondary", "tertiary", "unclassified", "residential", "road"
     };
 
-    [FieldOffset(0)] public long Id;
-    [FieldOffset(8)] public int LabelOffset;
-    [FieldOffset(12)] public GeometryType GeometryType;
-    [FieldOffset(13)] public int CoordinateOffset;
-    [FieldOffset(17)] public int CoordinateCount;
-    [FieldOffset(21)] public int PropertiesOffset;
-    [FieldOffset(25)] public int PropertyCount;
+    [FieldOffset(0)] public readonly long Id;
+    [FieldOffset(8)] public readonly int LabelOffset;
+    [FieldOffset(12)] public readonly GeometryType GeometryType;
+    [FieldOffset(13)] public readonly int CoordinateOffset;
+    [FieldOffset(17)] public readonly int CoordinateCount;
+    [FieldOffset(21)] public readonly int PropertiesOffset;
+    [FieldOffset(25)] public readonly int PropertyCount;
 }
