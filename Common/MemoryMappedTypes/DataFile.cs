@@ -25,6 +25,7 @@ public readonly ref struct MapFeatureData
     public ReadOnlySpan<char> Label { get; init; }
     public ReadOnlySpan<Coordinate> Coordinates { get; init; }
     public Dictionary<string, string> Properties { get; init; }
+    public MapProperty MapProperty { get; init; }
 }
 
 /// <summary>
@@ -49,12 +50,12 @@ public unsafe class DataFile : IDisposable
     private readonly MemoryMappedFile _mmf;
 
     private readonly byte* _ptr;
-    private readonly int CoordinateSizeInBytes = Marshal.SizeOf<Coordinate>();
-    private readonly int FileHeaderSizeInBytes = Marshal.SizeOf<FileHeader>();
-    private readonly int MapFeatureSizeInBytes = Marshal.SizeOf<MapFeature>();
-    private readonly int StringEntrySizeInBytes = Marshal.SizeOf<StringEntry>();
-    private readonly int TileBlockHeaderSizeInBytes = Marshal.SizeOf<TileBlockHeader>();
-    private readonly int TileHeaderEntrySizeInBytes = Marshal.SizeOf<TileHeaderEntry>();
+    private readonly int _coordinateSizeInBytes = Marshal.SizeOf<Coordinate>();
+    private readonly int _fileHeaderSizeInBytes = Marshal.SizeOf<FileHeader>();
+    private readonly int _mapFeatureSizeInBytes = Marshal.SizeOf<MapFeature>();
+    private readonly int _stringEntrySizeInBytes = Marshal.SizeOf<StringEntry>();
+    private readonly int _tileBlockHeaderSizeInBytes = Marshal.SizeOf<TileBlockHeader>();
+    private readonly int _tileHeaderEntrySizeInBytes = Marshal.SizeOf<TileHeaderEntry>();
 
     private bool _disposedValue;
 
@@ -91,19 +92,18 @@ public unsafe class DataFile : IDisposable
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
     private TileHeaderEntry* GetNthTileHeader(int i)
     {
-        return (TileHeaderEntry*)(_ptr + i * TileHeaderEntrySizeInBytes + FileHeaderSizeInBytes);
+        return (TileHeaderEntry*)(_ptr + i * _tileHeaderEntrySizeInBytes + _fileHeaderSizeInBytes);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
     private (TileBlockHeader? Tile, ulong TileOffset) GetTile(int tileId)
     {
-        ulong tileOffset = 0;
         for (var i = 0; i < _fileHeader->TileCount; ++i)
         {
             var tileHeaderEntry = GetNthTileHeader(i);
             if (tileHeaderEntry->ID == tileId)
             {
-                tileOffset = tileHeaderEntry->OffsetInBytes;
+                var tileOffset = tileHeaderEntry->OffsetInBytes;
                 return (*(TileBlockHeader*)(_ptr + tileOffset), tileOffset);
             }
         }
@@ -114,20 +114,20 @@ public unsafe class DataFile : IDisposable
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
     private MapFeature* GetFeature(int i, ulong offset)
     {
-        return (MapFeature*)(_ptr + offset + TileBlockHeaderSizeInBytes + i * MapFeatureSizeInBytes);
+        return (MapFeature*)(_ptr + offset + _tileBlockHeaderSizeInBytes + i * _mapFeatureSizeInBytes);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
     private ReadOnlySpan<Coordinate> GetCoordinates(ulong coordinateOffset, int ithCoordinate, int coordinateCount)
     {
-        return new ReadOnlySpan<Coordinate>(_ptr + coordinateOffset + ithCoordinate * CoordinateSizeInBytes,
+        return new ReadOnlySpan<Coordinate>(_ptr + coordinateOffset + ithCoordinate * _coordinateSizeInBytes,
             coordinateCount);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
     private void GetString(ulong stringsOffset, ulong charsOffset, int i, out ReadOnlySpan<char> value)
     {
-        var stringEntry = (StringEntry*)(_ptr + stringsOffset + i * StringEntrySizeInBytes);
+        var stringEntry = (StringEntry*)(_ptr + stringsOffset + i * _stringEntrySizeInBytes);
         value = new ReadOnlySpan<char>(_ptr + charsOffset + stringEntry->Offset * 2, stringEntry->Length);
     }
 
@@ -142,6 +142,71 @@ public unsafe class DataFile : IDisposable
         GetString(stringsOffset, charsOffset, i, out key);
         GetString(stringsOffset, charsOffset, i + 1, out value);
     }
+
+
+    private static MapProperty ClassifyProperties(IDictionary<string, string> properties, GeometryType geometryType)
+    {
+        if (properties.TryGetValue("highway", out var highwayValue))
+            return highwayValue switch
+            {
+                "motorway" => MapProperty.HighwayMotorway,
+                "trunk" => MapProperty.HighwayTrunk,
+                "primary" => MapProperty.HighwayPrimary,
+                "secondary" => MapProperty.HighwaySecondary,
+                "tertiary" => MapProperty.HighwayTertiary,
+                "residential" => MapProperty.HighwayResidential,
+                "unclassified" or "road" => MapProperty.Highway,
+                _ => MapProperty.Unknown
+            };
+        if (properties.Keys.Any(key => key.StartsWith("water")) && geometryType != GeometryType.Point)
+            return MapProperty.Waterway;
+        if (properties.TryGetValue("boundary", out var boundaryValue) && boundaryValue.StartsWith("administrative") &&
+            properties.TryGetValue("admin_level", out var adminLevelValue) && adminLevelValue == "2")
+            return MapProperty.Border;
+        if (geometryType != GeometryType.Point && properties.TryGetValue("place", out var placeValue) &&
+            new[] { "city", "town", "locality", "hamlet" }.Contains(placeValue))
+            return MapProperty.PlaceName;
+        if (properties.ContainsKey("railway"))
+            return MapProperty.Railway;
+        if (geometryType == GeometryType.Polygon && properties.TryGetValue("natural", out var naturalValue))
+            return naturalValue switch
+            {
+                "fell" or "grassland" or "heath" or "moor" or "scrub" or "wetland" => MapProperty.LandusePlain,
+                "wood" or "tree_row" => MapProperty.LanduseForest,
+                "bare_rock" or "rock" or "scree" => MapProperty.LanduseNaturalMountains,
+                "sand" or "beach" => MapProperty.LanduseNaturalDesert,
+                "water" => MapProperty.LanduseNaturalWater,
+                _ => MapProperty.LanduseNatural
+            };
+        if (properties.TryGetValue("boundary", out boundaryValue) && boundaryValue.StartsWith("forest"))
+            return MapProperty.LanduseForest;
+        if (properties.TryGetValue("landuse", out var landuseValue) &&
+            (landuseValue.StartsWith("forest") || landuseValue.StartsWith("orchard")))
+            return MapProperty.LanduseForest;
+        if (geometryType == GeometryType.Polygon && properties.TryGetValue("landuse", out landuseValue))
+            return landuseValue switch
+            {
+                "residential" or "cemetery" or "industrial" or "commercial" or "square" or
+                    "construction" or "military" or "quarry" or "brownfield"
+                    => MapProperty.LanduseResidential,
+                "farm" or "meadow" or "grass" or "greenfield" or
+                    "recreation_ground" or "winter_sports" or
+                    "allotments"
+                    => MapProperty.LandusePlain,
+                "reservoir" or "basin"
+                    => MapProperty.LanduseNaturalWater,
+                _ => MapProperty.Unknown
+            };
+        if (geometryType == GeometryType.Polygon && properties.ContainsKey("building"))
+            return MapProperty.Building;
+        if (geometryType == GeometryType.Polygon && properties.ContainsKey("leisure"))
+            return MapProperty.LandusePlain;
+        if (geometryType == GeometryType.Polygon && properties.ContainsKey("amenity"))
+            return MapProperty.LanduseResidential;
+
+        return MapProperty.Unknown;
+    }
+
 
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
     public void ForeachFeature(BoundingBox b, MapFeatureDelegate? action)
@@ -188,7 +253,8 @@ public unsafe class DataFile : IDisposable
                             Label = label,
                             Coordinates = coordinates,
                             Type = feature->GeometryType,
-                            Properties = properties
+                            Properties = properties,
+                            MapProperty = ClassifyProperties(properties, feature->GeometryType)
                         }))
                         break;
                 }
